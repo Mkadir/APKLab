@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import * as yaml from "js-yaml";
 import {
     APKTOOL_YML_FILENAME,
     DIST_DIR,
@@ -26,13 +27,13 @@ export namespace apktool {
 
         try {
             const fileContent = fs.readFileSync(apktoolYamlPath, "utf8");
-            const regArr = /apkFileName: .*\.apk/.exec(fileContent);
-            return regArr && regArr.length > 0 ? regArr[0].split(": ")[1] : "";
+            const parsed = yaml.load(fileContent) as any;
+            return parsed && parsed.apkFileName ? String(parsed.apkFileName) : "";
         } catch (err) {
             const errorMessage =
                 err instanceof Error ? err.message : String(err);
             outputChannel.appendLine(
-                `Couldn't find apkFileName in apktool.yml: ${errorMessage}`,
+                `Couldn't parse apktool.yml: ${errorMessage}`,
             );
             return "";
         }
