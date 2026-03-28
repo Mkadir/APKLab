@@ -105,32 +105,37 @@ export namespace UI {
                     projectDir = projectDir + "1";
                 }
 
-                // decode APK
-                await apktool.decodeAPK(apkFilePath, projectDir, args);
+                try {
+                    // decode APK
+                    await apktool.decodeAPK(apkFilePath, projectDir, args);
 
-                // decompile APK
-                if (decompileJava) {
-                    await jadx.decompileAPK(apkFilePath, projectDir, jadxArgs);
-                }
-                // quark analysis
-                if (quarkAnalysis) {
-                    await Quark.analyzeAPK(apkFilePath, projectDir);
-                }
+                    // decompile APK
+                    if (decompileJava) {
+                        await jadx.decompileAPK(apkFilePath, projectDir, jadxArgs);
+                    }
+                    // quark analysis
+                    if (quarkAnalysis) {
+                        await Quark.analyzeAPK(apkFilePath, projectDir);
+                    }
 
-                // Initialize project dir as git repo
-                const initializeGit = workspace
-                    .getConfiguration(extensionConfigName)
-                    .get("initProjectDirAsGit");
-                if (initializeGit)
-                    await git.initGitDir(projectDir, "Initial APKLab project");
+                    // Initialize project dir as git repo
+                    const initializeGit = workspace
+                        .getConfiguration(extensionConfigName)
+                        .get("initProjectDirAsGit");
+                    if (initializeGit)
+                        await git.initGitDir(projectDir, "Initial APKLab project");
 
-                // open project dir in a new window
-                if (!process.env["TEST"]) {
-                    await commands.executeCommand(
-                        "vscode.openFolder",
-                        Uri.file(projectDir),
-                        true,
-                    );
+                    // open project dir in a new window
+                    if (!process.env["TEST"]) {
+                        await commands.executeCommand(
+                            "vscode.openFolder",
+                            Uri.file(projectDir),
+                            true,
+                        );
+                    }
+                } catch (e) {
+                    const errorMsg = e instanceof Error ? e.message : String(e);
+                    outputChannel.appendLine(`APKLab process aborted: ${errorMsg}`);
                 }
             }
         } else {

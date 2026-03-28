@@ -34,4 +34,37 @@ export namespace adb {
             args: args,
         });
     }
+
+    export async function uninstallAPK(): Promise<void> {
+        const packageName = await vscode.window.showInputBox({ prompt: "Enter the package name to uninstall (e.g., com.example.app)" });
+        if (!packageName) return;
+
+        await executeProcess({
+            name: "Uninstalling",
+            report: `Uninstalling ${packageName}`,
+            command: "adb",
+            args: ["uninstall", packageName],
+        });
+    }
+
+    export async function launchApp(): Promise<void> {
+        const packageName = await vscode.window.showInputBox({ prompt: "Enter the package name to launch" });
+        if (!packageName) return;
+
+        await executeProcess({
+            name: "Launching",
+            report: `Launching ${packageName}`,
+            command: "adb",
+            args: ["shell", "monkey", "-p", packageName, "1"],
+        });
+    }
+
+    export async function streamLogcat(): Promise<void> {
+        const packageName = await vscode.window.showInputBox({ prompt: "Enter the package name to filter Logcat" });
+        if (!packageName) return;
+
+        const terminal = vscode.window.createTerminal(`Logcat: ${packageName}`);
+        terminal.show();
+        terminal.sendText(`adb logcat -e ${packageName}`);
+    }
 }

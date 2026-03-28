@@ -13,6 +13,7 @@ import { apkMitm } from "./tools/apk-mitm";
 import { Quark } from "./tools/quark-engine";
 import { adb } from "./tools/adb";
 import { apktool } from "./tools/apktool";
+import { rootBypass } from "./tools/root-bypass";
 
 export function activate(context: vscode.ExtensionContext): void {
     console.log("Activated apklab extension!");
@@ -28,12 +29,11 @@ export function activate(context: vscode.ExtensionContext): void {
         async () => {
             checkAndInstallTools()
                 .then(async () => {
-                    UI.openApkFile();
+                    await UI.openApkFile();
                 })
-                .catch(() => {
-                    outputChannel.appendLine(
-                        "Can't download/update dependencies!",
-                    );
+                .catch((e) => {
+                    const msg = e instanceof Error ? e.message : String(e);
+                    outputChannel.appendLine(`APKLab process aborted: ${msg}`);
                 });
         },
     );
@@ -43,13 +43,12 @@ export function activate(context: vscode.ExtensionContext): void {
         "apklab.rebuildApkFile",
         (uri: vscode.Uri) => {
             checkAndInstallTools()
-                .then(() => {
-                    UI.rebuildAPK(uri.fsPath);
+                .then(async () => {
+                    await UI.rebuildAPK(uri.fsPath);
                 })
-                .catch(() => {
-                    outputChannel.appendLine(
-                        "Can't download/update dependencies!",
-                    );
+                .catch((e) => {
+                    const msg = e instanceof Error ? e.message : String(e);
+                    outputChannel.appendLine(`APKLab process aborted: ${msg}`);
                 });
         },
     );
@@ -58,8 +57,29 @@ export function activate(context: vscode.ExtensionContext): void {
     const installAPkFileCommand = vscode.commands.registerCommand(
         "apklab.installApkFile",
         (uri: vscode.Uri) => {
-            adb.installAPK(uri.fsPath);
+            adb.installAPK(uri.fsPath).catch(e => {
+                const msg = e instanceof Error ? e.message : String(e);
+                outputChannel.appendLine(`APKLab process aborted: ${msg}`);
+            });
         },
+    );
+
+    // command for uninstalling app via adb
+    const uninstallAppCommand = vscode.commands.registerCommand(
+        "apklab.uninstallApp",
+        () => adb.uninstallAPK(),
+    );
+
+    // command for launching app via adb
+    const launchAppCommand = vscode.commands.registerCommand(
+        "apklab.launchApp",
+        () => adb.launchApp(),
+    );
+
+    // command for streaming logcat via adb
+    const logcatAppCommand = vscode.commands.registerCommand(
+        "apklab.logcatApp",
+        () => adb.streamLogcat(),
     );
 
     // command for rebuilding and installing the apk
@@ -77,10 +97,9 @@ export function activate(context: vscode.ExtensionContext): void {
                     );
                     await adb.installAPK(apkPath);
                 })
-                .catch(() => {
-                    outputChannel.appendLine(
-                        "Can't download/update dependencies!",
-                    );
+                .catch((e) => {
+                    const msg = e instanceof Error ? e.message : String(e);
+                    outputChannel.appendLine(`APKLab process aborted: ${msg}`);
                 });
         },
     );
@@ -91,18 +110,26 @@ export function activate(context: vscode.ExtensionContext): void {
         (uri: vscode.Uri) => apkMitm.applyMitmPatches(uri.fsPath),
     );
 
+    // command for patching files for root bypass
+    const patchApkForRootBypassCommand = vscode.commands.registerCommand(
+        "apklab.patchApkForRootBypass",
+        async (uri: vscode.Uri) => {
+            const projectDir = path.dirname(uri.fsPath);
+            await rootBypass.patchRootDetection(projectDir);
+        },
+    );
+
     // command to empty apktool framework resource dir
     const emptyFrameworkDirCommand = vscode.commands.registerCommand(
         "apklab.emptyFrameworkDir",
         () => {
             checkAndInstallTools()
-                .then(() => {
-                    apktool.emptyFrameworkDir();
+                .then(async () => {
+                    await apktool.emptyFrameworkDir();
                 })
-                .catch(() => {
-                    outputChannel.appendLine(
-                        "Can't download/update dependencies!",
-                    );
+                .catch((e) => {
+                    const msg = e instanceof Error ? e.message : String(e);
+                    outputChannel.appendLine(`APKLab process aborted: ${msg}`);
                 });
         },
     );
@@ -119,8 +146,12 @@ export function activate(context: vscode.ExtensionContext): void {
         openApkFileCommand,
         rebuildAPkFileCommand,
         installAPkFileCommand,
+        uninstallAppCommand,
+        launchAppCommand,
+        logcatAppCommand,
         rebuildAndInstallAPkFileCommand,
         patchApkForHttpsCommand,
+        patchApkForRootBypassCommand,
         emptyFrameworkDirCommand,
         quarkReportCommand,
     );
