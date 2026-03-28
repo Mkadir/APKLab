@@ -3,15 +3,88 @@ import * as https from "https";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-// TODO: replace with another unzip library that has proper types
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import extract = require("extract-zip");
+import AdmZip = require("adm-zip");
 import {
     extensionConfigName,
     apklabDataDir,
     outputChannel,
 } from "../data/constants";
 import { Tool } from "./updater";
+
+export async function downloadFileToPath(
+    urlString: string,
+    destPath: string,
+    redirectCount = 0,
+): Promise<void> {
+    if (redirectCount >= MAX_REDIRECTS) {
+        throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
+    }
+
+    return new Promise<void>((resolve, reject) => {
+        const request = https.request(new URL(urlString), (response) => {
+            if (
+                (response.statusCode === 301 || response.statusCode === 302) &&
+                response.headers.location
+            ) {
+                // Redirect - download from new location
+                return resolve(
+                    downloadFileToPath(response.headers.location, destPath, redirectCount + 1),
+                );
+            } else if (response.statusCode !== 200) {
+                // Download failed - print error message
+                const errorMsg = `Download failed with response code: ${response.statusCode}`;
+                outputChannel.appendLine(errorMsg);
+                reject(new Error(errorMsg));
+            }
+
+            // Downloading - hook up events
+            const contentLength = response.headers["content-length"]
+                ? response.headers["content-length"]
+                : "0";
+            const packageSize = parseInt(contentLength, 10);
+            let downloadedBytes = 0;
+            let downloadPercentage = 0;
+
+            outputChannel.appendLine(
+                `Download size: ${(packageSize / 1024 / 1024).toFixed(2)} MB`,
+            );
+
+            const fileStream = fs.createWriteStream(destPath);
+
+            response.on("data", (data) => {
+                downloadedBytes += data.length;
+                fileStream.write(data);
+
+                // Update status bar item with percentage
+                const newPercentage = Math.ceil(
+                    100 * (downloadedBytes / packageSize),
+                );
+                if (newPercentage !== downloadPercentage) {
+                    downloadPercentage = newPercentage;
+                    outputChannel.appendLine(
+                        `Downloaded ${downloadPercentage}%`,
+                    );
+                }
+            });
+
+            response.on("end", () => {
+                fileStream.end(() => resolve());
+            });
+
+            response.on("error", (err) => {
+                fileStream.close();
+                reject(err);
+            });
+        });
+
+        request.on("error", (err) => {
+            reject(err);
+        });
+
+        // Execute the request
+        request.end();
+    });
+}
 
 /**
  * Downloads and saves a Tool in apklabDataDir.
@@ -24,14 +97,14 @@ export async function downloadTool(tool: Tool): Promise<string | null> {
         outputChannel.appendLine("-".repeat(50));
         outputChannel.appendLine(`Downloading file: ${tool.fileName}`);
         outputChannel.appendLine("-".repeat(50));
-        const buffer = await downloadFile(tool.downloadUrl);
         const filePath = path.join(apklabDataDir, tool.fileName);
-        fs.writeFileSync(filePath, buffer);
+        await downloadFileToPath(tool.downloadUrl, filePath);
         let configPath = filePath;
         if (tool.zipped && tool.unzipDir) {
             configPath = path.join(apklabDataDir, tool.unzipDir);
             try {
-                await extract(filePath, { dir: configPath });
+                const zip = new AdmZip(filePath);
+                zip.extractAllTo(configPath, true);
                 outputChannel.appendLine(
                     `Extracted ${filePath} into ${configPath}`,
                 );

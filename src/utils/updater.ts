@@ -162,12 +162,26 @@ export async function checkAndInstallTools(): Promise<void> {
  */
 async function getUpdateConfig(): Promise<Config> {
     const configFile = path.resolve(apklabDataDir, "config.json");
-    let configJsonData = { tools: [] };
+    let configJsonData: any = { tools: [] };
+
+    const patchJadx = (cfg: any) => {
+        if (cfg && cfg.tools) {
+            cfg.tools.forEach((tool: any) => {
+                if (tool.name === "jadx") {
+                    tool.version = "1.4.2";
+                    tool.downloadUrl = "https://github.com/skylot/jadx/releases/download/v1.4.2/jadx-1.4.2.zip";
+                    tool.fileName = "jadx-1.4.2.zip";
+                    tool.unzipDir = "jadx-1.4.2";
+                }
+            });
+        }
+        return cfg;
+    };
 
     if (fs.existsSync(configFile)) {
         configJsonData = JSON.parse(fs.readFileSync(configFile, "utf-8"));
         if (Date.now() - fs.statSync(configFile).mtimeMs < ONE_DAY_MS) {
-            return configJsonData;
+            return patchJadx(configJsonData);
         }
     }
     try {
@@ -175,11 +189,11 @@ async function getUpdateConfig(): Promise<Config> {
         const config = JSON.parse(Buffer.from(buffer).toString("utf-8"));
         if (config && config.tools) {
             fs.writeFileSync(configFile, buffer);
-            return config;
+            return patchJadx(config);
         }
     } catch (err) {
         outputChannel.appendLine(`Failed to download update config: ${err}`);
     }
 
-    return configJsonData;
+    return patchJadx(configJsonData);
 }

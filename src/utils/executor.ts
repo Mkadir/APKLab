@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as cross_spawn from "cross-spawn";
 import * as vscode from "vscode";
-import { outputChannel } from "../data/constants";
+import { outputChannel, extensionConfigName } from "../data/constants";
 
 /**
  * Options for executeProcess function.
@@ -57,14 +57,23 @@ export function executeProcess(processOptions: ProcessOptions): Thenable<void> {
             cancellable: true,
         },
         (progress, token) => {
-            return new Promise<void>((resolve) => {
+            return new Promise<void>((resolve, reject) => {
                 progress.report({ message: processOptions.report });
+
+                const env = Object.assign({}, process.env);
+                const jvmHeapSize = vscode.workspace
+                    .getConfiguration(extensionConfigName)
+                    .get("jvmHeapSize");
+                if (jvmHeapSize && typeof jvmHeapSize === "string" && jvmHeapSize.trim().length > 0) {
+                    env.JAVA_TOOL_OPTIONS = jvmHeapSize;
+                }
 
                 const cp = cross_spawn.spawn(
                     processOptions.command,
                     processOptions.args,
                     {
                         shell: processOptions.shell,
+                        env: env,
                     },
                 );
                 cp.stdout.on("data", (data) =>
@@ -95,6 +104,7 @@ export function executeProcess(processOptions: ProcessOptions): Thenable<void> {
                         if (processOptions.onSuccess) {
                             await processOptions.onSuccess();
                         }
+                        resolve();
                     } else {
                         const errorMsg =
                             code !== 0
@@ -104,8 +114,8 @@ export function executeProcess(processOptions: ProcessOptions): Thenable<void> {
                         vscode.window.showErrorMessage(
                             `APKLab: ${processOptions.name} process failed.`,
                         );
+                        reject(new Error(errorMsg));
                     }
-                    resolve();
                 });
                 token.onCancellationRequested(() => {
                     outputChannel.appendLine(
