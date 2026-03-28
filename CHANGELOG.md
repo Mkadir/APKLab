@@ -1,6 +1,25 @@
-# Changelog
+# HexLab Changelog
 
-## [1.7.0] - 2023-07-23
+> HexLab is a fork of [APKLab](https://github.com/APKLab/APKLab) by Surendrajat. This repo ([Mkadir/APKLab](https://github.com/Mkadir/APKLab)) extends it with additional ADB tools and more.
+
+## [1.7.1] - 2026-03-28 (HexLab)
+
+### Added
+
+- **ADB: Uninstall App** — uninstall the package from a connected device directly from VS Code
+- **ADB: Launch App** — launch the installed app on a connected device
+- **ADB: Stream Logcat** — stream logcat output filtered to your app's package in the VS Code Output panel
+- **JVM Heap Size** setting (`apklab.jvmHeapSize`) — configure max heap (e.g. `-Xmx4g`) for decompiling large APKs
+- Replaced `adm-zip` unzipping with modern `adm-zip` API for better reliability
+
+### Changed
+
+- Rebranded from **APKLab** to **HexLab**
+- Updated README with full feature documentation
+
+---
+
+## [1.7.0] - 2023-07-23 (Upstream APKLab)
 
 ### Added
 

@@ -1,21 +1,21 @@
 {
-    "name": "apklab",
-    "displayName": "APKLab",
-    "description": "Android Reverse-Engineering Workbench",
-    "publisher": "Surendrajat",
+    "name": "hexlab",
+    "displayName": "HexLab",
+    "description": "Advanced Android Reverse-Engineering Workbench — forked from APKLab",
+    "publisher": "HexLab",
     "version": "1.7.1",
     "license": "SEE LICENSE IN LICENSE",
     "icon": "assets/icon.png",
     "engines": {
         "vscode": "^1.75.0"
     },
-    "homepage": "https://apklab.surendrajat.xyz",
+    "homepage": "https://github.com/Mkadir/APKLab",
     "repository": {
         "type": "git",
-        "url": "https://github.com/APKLab/APKLab.git"
+        "url": "https://github.com/Mkadir/APKLab.git"
     },
     "bugs": {
-        "url": "https://github.com/APKLab/APKLab/issues"
+        "url": "https://github.com/Mkadir/APKLab/issues"
     },
     "extensionDependencies": [
         "LoyieKing.smalise"
@@ -59,6 +59,10 @@
                 "title": "APKLab: Prepare for HTTPS inspection"
             },
             {
+                "command": "apklab.patchApkForRootBypass",
+                "title": "APKLab: Patch APK for Root Bypass"
+            },
+            {
                 "command": "apklab.installApkFile",
                 "title": "APKLab: Install the APK"
             },
@@ -69,6 +73,18 @@
             {
                 "command": "apklab.emptyFrameworkDir",
                 "title": "APKLab: Empty ApkTool Framework Dir"
+            },
+            {
+                "command": "apklab.uninstallApp",
+                "title": "APKLab: ADB Uninstall App"
+            },
+            {
+                "command": "apklab.launchApp",
+                "title": "APKLab: ADB Launch App"
+            },
+            {
+                "command": "apklab.logcatApp",
+                "title": "APKLab: ADB Stream Logcat"
             },
             {
                 "command": "apklab.quarkReport",
@@ -94,6 +110,10 @@
                     "when": "false"
                 },
                 {
+                    "command": "apklab.patchApkForRootBypass",
+                    "when": "false"
+                },
+                {
                     "command": "apklab.quarkReport",
                     "when": "false"
                 }
@@ -115,6 +135,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "apklab.patchApkForRootBypass",
+                    "when": "resourceFilename == apktool.yml",
+                    "group": "navigation"
+                },
+                {
                     "command": "apklab.quarkReport",
                     "when": "resourceFilename == quarkReport.json",
                     "group": "navigation"
@@ -131,6 +156,10 @@
                 },
                 {
                     "command": "apklab.patchApkForHttps",
+                    "when": "resourceFilename == apktool.yml"
+                },
+                {
+                    "command": "apklab.patchApkForRootBypass",
                     "when": "resourceFilename == apktool.yml"
                 },
                 {
@@ -156,6 +185,11 @@
                 },
                 {
                     "command": "apklab.patchApkForHttps",
+                    "when": "resourceFilename == apktool.yml",
+                    "group": "navigation"
+                },
+                {
+                    "command": "apklab.patchApkForRootBypass",
                     "when": "resourceFilename == apktool.yml",
                     "group": "navigation"
                 },
@@ -213,6 +247,11 @@
                     "type": "boolean",
                     "default": "false",
                     "markdownDescription": "Initialize project output directory as **Git** repository."
+                },
+                "apklab.jvmHeapSize": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "Provide JVM Max Heap Size constraints for decompiling extremely large packages (e.g. `-Xmx4g`). Leave blank for default."
                 }
             }
         }
@@ -224,13 +263,15 @@
         "pretest": "tsc -p ./",
         "test": "node ./out/test/runTest.js",
         "watch": "node esbuild.config.mjs --watch",
-        "vscode:prepublish": "yarn clean && node esbuild.config.mjs --production",
-        "package": "vsce package --yarn"
+        "vscode:prepublish": "npm run clean && node esbuild.config.mjs --production",
+        "package": "vsce package"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.1",
+        "@types/adm-zip": "^0.5.8",
         "@types/cross-spawn": "^6.0.6",
         "@types/glob": "^9.0.0",
+        "@types/js-yaml": "^4.0.9",
         "@types/listr": "^0.14.10",
         "@types/mocha": "^10.0.10",
         "@types/node": "^24",
@@ -247,8 +288,9 @@
         "typescript-eslint": "^8.46.3"
     },
     "dependencies": {
+        "adm-zip": "^0.5.16",
         "apk-mitm": "^1.3.0",
         "cross-spawn": "^7.0.6",
-        "extract-zip": "^2.0.1"
+        "js-yaml": "^4.1.1"
     }
 }
