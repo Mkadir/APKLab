@@ -9,7 +9,7 @@ Advanced Android Reverse-Engineering Workbench right inside your <a href="https:
 </h4>
 
 <p align="center">
-  <em>Forked from <a href="https://github.com/APKLab/APKLab">APKLab</a> — extended with additional ADB tooling, configurable JVM heap sizing, and more.</em>
+  <em>Forked from <a href="https://github.com/APKLab/APKLab">APKLab</a> — extended with additional ADB tooling, configurable JVM heap sizing, root-bypass tooling, and more.</em>
 </p>
 
 <p align="center">
@@ -27,6 +27,7 @@ HexLab seamlessly integrates the best open-source tools: <a href="https://github
 - Initialize project dir as a Git repo
 - Excellent Smali language support with [**Smalise**](https://github.com/LoyieKing/Smalise)
 - Apply MITM patch for HTTPS inspection
+- Patch common string-based root / emulator checks and exact MyID SDK detections in smali
 - Build (and rebuild) an APK from Smali and resources
 - Rebuild an APK in Debug mode for dynamic analysis
 - Sign the APK seamlessly during the build
@@ -70,6 +71,12 @@ HexLab seamlessly integrates the best open-source tools: <a href="https://github
 
 - Right-click on or inside `apktool.yml` ➜ <kbd>APKLab: Prepare for HTTPS inspection</kbd>
 
+#### Apply root bypass patch
+
+- Right-click on or inside `apktool.yml` ➜ <kbd>APKLab: Patch APK for Root Bypass</kbd>
+- Exact MyID SDK methods are patched when `uz/myid/android/sdk/capture/core/MyIdStore` is present
+- Common string-based detector constants such as `su`, `test-keys`, emulator markers, shell-channel labels, and selected SELinux checks are mutated in app-side smali with rebuild validation support
+
 #### Rebuild and Sign APK
 
 - Right-click on or inside `apktool.yml` ➜ <kbd>APKLab: Rebuild the APK</kbd>
@@ -107,6 +114,8 @@ HexLab seamlessly integrates the best open-source tools: <a href="https://github
 
   `"apklab.jadxDirPath": "/home/user/downloads/jadx-1.4.7"`
 
+  On Linux and macOS, HexLab will automatically repair execute permissions for the bundled Jadx launcher scripts and run them through `bash` when needed.
+
 </details>
 
 <details>
@@ -125,6 +134,9 @@ HexLab seamlessly integrates the best open-source tools: <a href="https://github
 - **`apklab.jvmHeapSize`**: JVM Max Heap Size for decompiling very large APKs (e.g. `-Xmx4g`). Leave blank for the JVM default.
 - **`apklab.initProjectDirAsGit`**: Automatically initialize the project output directory as a Git repository.
 - **`apklab.updateTools`**: Whether HexLab should check for tool updates on startup.
+- **`apklab.rootBypassVerifyRebuild`**: Rebuild immediately after a root bypass patch to catch smali issues early.
+- **`apklab.rootBypassScope`**: Root bypass scan scope. `app-only` focuses on the app package, `all` scans all smali classes.
+- **`apklab.rootBypassAdditionalPackages`**: Extra Java package prefixes to include in root bypass analysis.
 
 </details>
 

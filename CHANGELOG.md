@@ -10,12 +10,17 @@
 - **ADB: Launch App** — launch the installed app on a connected device
 - **ADB: Stream Logcat** — stream logcat output filtered to your app's package in the VS Code Output panel
 - **JVM Heap Size** setting (`apklab.jvmHeapSize`) — configure max heap (e.g. `-Xmx4g`) for decompiling large APKs
+- **Root Bypass** command with:
+  - exact MyID SDK smali patches for `MyIdStore` RASP getters/setters
+  - string-based detector mutation for common root / emulator / debug / VPN checks
+  - optional rebuild verification and JSON audit report output
 - Replaced `adm-zip` unzipping with modern `adm-zip` API for better reliability
 
 ### Changed
 
 - Rebranded from **APKLab** to **HexLab**
 - Updated README with full feature documentation
+- Jadx launcher handling on Unix-like systems now repairs executable permissions automatically and runs the launcher via `bash` when needed
 
 ---
 
