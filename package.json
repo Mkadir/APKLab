@@ -252,6 +252,28 @@
                     "type": "string",
                     "default": "",
                     "markdownDescription": "Provide JVM Max Heap Size constraints for decompiling extremely large packages (e.g. `-Xmx4g`). Leave blank for default."
+                },
+                "apklab.rootBypassVerifyRebuild": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "After root bypass patching, run an immediate Apktool rebuild verification to catch smali issues early."
+                },
+                "apklab.rootBypassScope": {
+                    "type": "string",
+                    "enum": [
+                        "app-only",
+                        "all"
+                    ],
+                    "default": "app-only",
+                    "markdownDescription": "Scope for root/emulator bypass patching. `app-only` patches only classes under your app package from AndroidManifest.xml. `all` scans every smali class, including third-party libraries."
+                },
+                "apklab.rootBypassAdditionalPackages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "markdownDescription": "Additional Java package prefixes to include when `apklab.rootBypassScope` is `app-only` (for example SDK namespaces like `uz.myid.android.sdk`)."
                 }
             }
         }
@@ -291,6 +313,7 @@
         "adm-zip": "^0.5.16",
         "apk-mitm": "^1.3.0",
         "cross-spawn": "^7.0.6",
-        "js-yaml": "^4.1.1"
+        "js-yaml": "^4.1.1",
+        "yarn": "^1.22.22"
     }
 }

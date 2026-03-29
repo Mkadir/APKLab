@@ -108,6 +108,33 @@ export async function downloadTool(tool: Tool): Promise<string | null> {
                 outputChannel.appendLine(
                     `Extracted ${filePath} into ${configPath}`,
                 );
+
+                if (tool.name === "jadx" && !process.platform.startsWith("win")) {
+                    const jadxScripts = [
+                        path.join(configPath, "bin", "jadx"),
+                        path.join(configPath, "bin", "jadx-gui"),
+                    ];
+                    for (const scriptPath of jadxScripts) {
+                        if (!fs.existsSync(scriptPath)) {
+                            continue;
+                        }
+                        try {
+                            const mode = fs.statSync(scriptPath).mode;
+                            fs.chmodSync(scriptPath, mode | 0o111);
+                            outputChannel.appendLine(
+                                `Updated executable permission: ${scriptPath}`,
+                            );
+                        } catch (chmodError) {
+                            const errorMessage =
+                                chmodError instanceof Error
+                                    ? chmodError.message
+                                    : String(chmodError);
+                            outputChannel.appendLine(
+                                `Warning: Failed to set Jadx permissions: ${errorMessage}`,
+                            );
+                        }
+                    }
+                }
             } catch (err) {
                 const errorMessage =
                     err instanceof Error ? err.message : String(err);
